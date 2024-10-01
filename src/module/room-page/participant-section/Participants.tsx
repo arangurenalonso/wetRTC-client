@@ -5,7 +5,7 @@ import useRoomStore from '../../../hooks/useRoomStore';
 type ParticipantsProps = {};
 
 const Participants = ({}: ParticipantsProps) => {
-  const { participantsOfRoom, roomId } = useRoomStore();
+  const { participantsOfRoom } = useRoomStore();
 
   return (
     <div className="participants_container">

@@ -34,6 +34,23 @@ export const roomSlice = createSlice({
       //   ];
       // }
     },
+    setMic: (state, action: PayloadAction<boolean>) => {
+      state.isMicroOn = action.payload;
+    },
+    setCam: (state, action: PayloadAction<boolean>) => {
+      state.isCamarasOn = action.payload;
+    },
+    setShare: (state, action: PayloadAction<boolean>) => {
+      state.isShareOn = action.payload;
+    },
+    setChat: (state, action: PayloadAction<boolean>) => {
+      state.isPeopleOpen = false;
+      state.isChatOpen = action.payload;
+    },
+    setPeople: (state, action: PayloadAction<boolean>) => {
+      state.isChatOpen = false;
+      state.isPeopleOpen = action.payload;
+    },
   },
 });
 
@@ -43,4 +60,9 @@ export const {
   setRoomId,
   setIdentity,
   setParticipantsOfRoom,
+  setMic,
+  setCam,
+  setShare,
+  setChat,
+  setPeople,
 } = roomSlice.actions;

@@ -17,12 +17,13 @@ const RoomPage = ({}: RoomPageProps) => {
   useStreammingWSS();
   const { roomId, identity, isRoomHost } = useRoomStore();
 
-  const { initializeRoom } = useWebRTC();
+  const { initializeRoom, getLocalPreviewAndInitRoomConnection, loading } =
+    useWebRTC();
+
   useEffect(() => {
     initializeRoom();
   }, []);
 
-  const { getLocalPreviewAndInitRoomConnection, loading } = useWebRTC();
   useEffect(() => {
     getLocalPreviewAndInitRoomConnection(isRoomHost, identity, roomId);
   }, []);

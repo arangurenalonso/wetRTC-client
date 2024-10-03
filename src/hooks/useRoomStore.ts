@@ -1,11 +1,16 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store/store';
 import {
+  setCam,
+  setChat,
   setConnectOnlyWithAudio,
   setIdentity,
   setIsRoomHost,
+  setMic,
   setParticipantsOfRoom,
+  setPeople,
   setRoomId,
+  setShare,
 } from '../store/main/room.slice';
 import { serverApi } from '../api/server';
 import { UserParticipant } from '../store/main/room.initial-state';
@@ -18,6 +23,11 @@ const useRoomStore = () => {
     connectOnlyWithAudio,
     roomId,
     participantsOfRoom,
+    isChatOpen,
+    isPeopleOpen,
+    isCamarasOn,
+    isMicroOn,
+    isShareOn,
   } = useSelector((state: RootState) => state.room);
 
   const onSetIsRoomHostProcess = async (isHostedRoom: boolean) => {
@@ -41,6 +51,21 @@ const useRoomStore = () => {
   const onSetParticipantsProcess = async (participants: UserParticipant[]) => {
     dispatch(setParticipantsOfRoom(participants));
   };
+  const tougleChat = () => {
+    dispatch(setChat(!isChatOpen));
+  };
+  const touglePeople = () => {
+    dispatch(setPeople(!isPeopleOpen));
+  };
+  const tougleCam = () => {
+    dispatch(setCam(!isCamarasOn));
+  };
+  const tougleMic = () => {
+    dispatch(setMic(!isMicroOn));
+  };
+  const tougleShare = () => {
+    dispatch(setShare(!isShareOn));
+  };
   return {
     //*Properties
     identity,
@@ -48,6 +73,12 @@ const useRoomStore = () => {
     connectOnlyWithAudio,
     roomId,
     participantsOfRoom,
+    isChatOpen,
+    isPeopleOpen,
+    isCamarasOn,
+    isMicroOn,
+    isShareOn,
+
     //*Methods
     onSetIsRoomHostProcess,
     ontSetConnectOnlyWithAudioProcess,
@@ -55,6 +86,11 @@ const useRoomStore = () => {
     onSetIdentityProcess,
     onSetRoomIdProcess,
     onSetParticipantsProcess,
+    tougleChat,
+    touglePeople,
+    tougleCam,
+    tougleMic,
+    tougleShare,
   };
 };
 export default useRoomStore;

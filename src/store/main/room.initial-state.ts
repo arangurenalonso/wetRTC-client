@@ -10,6 +10,11 @@ export type RoomState = {
   connectOnlyWithAudio: boolean;
   roomId?: string;
   participantsOfRoom: UserParticipant[];
+  isChatOpen: boolean;
+  isPeopleOpen: boolean;
+  isCamarasOn: boolean;
+  isMicroOn: boolean;
+  isShareOn: boolean;
 };
 
 export const roomInitialState: RoomState = {
@@ -18,4 +23,9 @@ export const roomInitialState: RoomState = {
   connectOnlyWithAudio: false,
   roomId: undefined,
   participantsOfRoom: [],
+  isChatOpen: false,
+  isPeopleOpen: false,
+  isCamarasOn: true,
+  isMicroOn: true,
+  isShareOn: false,
 };

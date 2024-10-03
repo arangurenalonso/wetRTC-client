@@ -4,15 +4,18 @@ import store from './store/store';
 import RouterConfig from './router/RouterConfig';
 import WebRCTProvider from './context/webRTC/webRCTProvider';
 import SocketProvider from './context/wss/socketProvider';
+import AppTheme from './theme/AppTheme';
 
 function App() {
   return (
     <Provider store={store}>
-      <SocketProvider>
-        <WebRCTProvider>
-          <RouterConfig />
-        </WebRCTProvider>
-      </SocketProvider>
+      <AppTheme>
+        <SocketProvider>
+          <WebRCTProvider>
+            <RouterConfig />
+          </WebRCTProvider>
+        </SocketProvider>
+      </AppTheme>
     </Provider>
   );
 }

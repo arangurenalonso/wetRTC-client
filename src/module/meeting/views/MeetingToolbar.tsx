@@ -30,6 +30,7 @@ import useRoomStore from '../../../hooks/useRoomStore';
 import MenuItemHover from '../component/MenuItemHover';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import useWebRTC from '../../../context/webRTC/useWebRTC';
 const MeetingToolbar = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
@@ -49,6 +50,23 @@ const MeetingToolbar = () => {
     tougleShare,
     roomId,
   } = useRoomStore();
+  const { localStream, toggleLocalVideo, toggleLocalAudio, handleShareScreen } =
+    useWebRTC();
+  useEffect(() => {
+    handleShareScreen(isShareOn);
+  }, [isShareOn]);
+
+  useEffect(() => {
+    if (localStream) {
+      toggleLocalVideo(!isCamarasOn);
+    }
+  }, [isCamarasOn, localStream]);
+
+  useEffect(() => {
+    if (localStream) {
+      toggleLocalAudio(!isMicroOn);
+    }
+  }, [isMicroOn, localStream]);
 
   useEffect(() => {
     if (roomId) {

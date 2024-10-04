@@ -1,27 +1,18 @@
 import { Box, Grid2, useMediaQuery, useTheme } from '@mui/material';
 import VideoThumbGallery from '../component/VideoThumbGallery';
+import useWebRTC from '../../../context/webRTC/useWebRTC';
+import useRoomStore from '../../../hooks/useRoomStore';
+import VideoComponent from '../component/VideoComponent';
+import { useState } from 'react';
 
 const VideoGrid = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
-  const videos = [
-    { src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-  ];
 
+  const { streams, localStream, socketIdHost, screenSharingStream } =
+    useWebRTC();
+  const { participantsOfRoom } = useRoomStore();
+  const [stream, setStream] = useState<MediaStream | null>(null);
   return (
     <Box
       sx={{
@@ -46,13 +37,7 @@ const VideoGrid = () => {
           }}
         >
           <Box sx={{ height: '100%', width: '100%' }}>
-            <video
-              src={videos[0].src}
-              style={{
-                width: '100%',
-                objectFit: 'contain',
-              }}
-            />
+            {stream && <VideoComponent stream={stream} mutedVideo={true} />}
           </Box>
         </Grid2>
         <Grid2
@@ -63,7 +48,20 @@ const VideoGrid = () => {
           }}
         >
           <VideoThumbGallery
-            videos={videos}
+            screenSharingStream={screenSharingStream}
+            onStream={(stream) => stream && setStream(stream)}
+            streams={{
+              ...streams,
+              ...(socketIdHost && localStream
+                ? {
+                    [socketIdHost]: {
+                      instance: localStream,
+                      isHost: true,
+                    },
+                  }
+                : {}),
+            }}
+            participantsOfRoom={participantsOfRoom}
             direction={isSmallScreen ? 'row' : 'column'}
           />
         </Grid2>

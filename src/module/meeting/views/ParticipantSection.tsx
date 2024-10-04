@@ -4,7 +4,7 @@ import TitleSidebar from '../component/TitleSidebar';
 import ParticipantList from '../component/ParticipantList';
 
 const ParticipantSection = () => {
-  const { isPeopleOpen, touglePeople } = useRoomStore();
+  const { isPeopleOpen, touglePeople, participantsOfRoom } = useRoomStore();
   return (
     <Paper
       sx={{
@@ -31,7 +31,7 @@ const ParticipantSection = () => {
             overflow: 'hidden',
           }}
         >
-          <ParticipantList />
+          <ParticipantList participants={participantsOfRoom} />
         </Grid2>
       </Grid2>
     </Paper>

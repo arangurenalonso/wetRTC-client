@@ -13,6 +13,7 @@ const MeetingLayout = ({ toolbar, children, sideBar }: MeetingLayoutProps) => {
         height: '100%',
       }}
       direction="column"
+      spacing={0.5}
     >
       <Grid2 size="auto">{toolbar}</Grid2>
 

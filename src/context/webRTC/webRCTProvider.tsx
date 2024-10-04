@@ -12,7 +12,10 @@ export interface PeersMap {
   [key: string]: Peer.Instance;
 }
 export interface StreamMap {
-  [key: string]: MediaStream;
+  [key: string]: {
+    isHost: boolean;
+    instance: MediaStream;
+  };
 }
 
 const WebRCTProvider = ({ children }: WebRCTProviderProps) => {
@@ -22,10 +25,47 @@ const WebRCTProvider = ({ children }: WebRCTProviderProps) => {
   const { signalPeerData } = useEmitSocket();
   const [isRoomInitiator, setIsRoomInitiator] = useState<boolean>(false);
   const { getLocalStream, loading } = usePermission();
+  const [screenSharingStream, setScreenSharingStream] =
+    useState<MediaStream | null>(null);
 
-  useEffect(() => {
-    console.log('localStream', localStream);
-  }, [localStream]);
+  const handleShareScreen = async (isScreenSharing: boolean) => {
+    if (isScreenSharing) {
+      let stream = null;
+      try {
+        stream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: true,
+        });
+      } catch (error) {
+        console.error('Error accessing screen sharing stream:', error);
+      }
+      if (stream) {
+        setScreenSharingStream(stream);
+        // Cambiar el stream en la conexión peer existente
+        if (localStream) {
+          Object.values(peer).forEach((peerInstance) => {
+            peerInstance.replaceTrack(
+              localStream?.getVideoTracks()[0], // El track de video anterior
+              stream.getVideoTracks()[0], // El track de video de la pantalla compartida
+              localStream // Stream original
+            );
+          });
+        }
+      }
+    } else {
+      screenSharingStream?.getTracks().forEach((track) => track.stop());
+      setScreenSharingStream(null);
+      if (screenSharingStream && localStream) {
+        Object.values(peer).forEach((peerInstance) => {
+          peerInstance.replaceTrack(
+            screenSharingStream?.getVideoTracks()[0],
+            localStream?.getVideoTracks()[0],
+            localStream
+          );
+        });
+      }
+    }
+  };
   const getConfiguration = () => {
     return {
       iceServers: [
@@ -65,7 +105,10 @@ const WebRCTProvider = ({ children }: WebRCTProviderProps) => {
         console.log('new stream come');
         setStreams((prevStreams) => ({
           ...prevStreams,
-          [usersSocketId]: stream,
+          [usersSocketId]: {
+            isHost: false,
+            instance: stream,
+          },
         }));
       });
       peerInstance.on('error', (err) => {
@@ -97,7 +140,7 @@ const WebRCTProvider = ({ children }: WebRCTProviderProps) => {
   const removePeerConnection = (socketIdUserDisconnected: string) => {
     const stream = streams[socketIdUserDisconnected];
     if (stream) {
-      stream.getTracks().forEach((track) => {
+      stream.instance.getTracks().forEach((track) => {
         track.stop();
       });
     }
@@ -129,7 +172,7 @@ const WebRCTProvider = ({ children }: WebRCTProviderProps) => {
       setPeer({});
       //Clean up the streams
       Object.values(streams).forEach((stream) => {
-        stream.getTracks().forEach((track) => track.stop());
+        stream.instance.getTracks().forEach((track) => track.stop());
       });
       setStreams({});
     };
@@ -150,10 +193,12 @@ const WebRCTProvider = ({ children }: WebRCTProviderProps) => {
         localStream,
         loading,
         isRoomInitiator,
+        screenSharingStream,
         createPeerConnection,
         signalingData,
         removePeerConnection,
         initializeRoom,
+        handleShareScreen,
       }}
     >
       {children}

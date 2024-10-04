@@ -1,13 +1,43 @@
 import { Box, useTheme } from '@mui/material';
+import { StreamMap } from '../../../context/webRTC/webRCTProvider';
+import { UserParticipant } from '../../../store/main/room.initial-state';
+import VideoComponent from './VideoComponent';
+import { useEffect, useState } from 'react';
+import VideoItemThumbGalleryContainer from './VideoItemThumbGalleryContainer';
 
 type VideoThumbGalleryProps = {
-  videos: { src: string }[];
   direction: 'row' | 'column';
+  screenSharingStream?: MediaStream | null;
+  streams: StreamMap;
+  participantsOfRoom: UserParticipant[];
+  onStream: (stream?: MediaStream) => void;
 };
 
-const VideoThumbGallery = ({ videos, direction }: VideoThumbGalleryProps) => {
-  const theme = useTheme(); // Utilizamos el tema de Material-UI para obtener el color primario
+const VideoThumbGallery = ({
+  streams,
+  participantsOfRoom,
+  direction,
+  onStream,
+  screenSharingStream,
+}: VideoThumbGalleryProps) => {
+  const [socketIdSelected, setSocketIdSelected] = useState<string | null>();
 
+  useEffect(() => {
+    if (socketIdSelected) {
+      const stream = streams[socketIdSelected];
+      if (stream) {
+        onStream(stream.instance);
+      }
+    }
+  }, [socketIdSelected]);
+  useEffect(() => {
+    if (!socketIdSelected) {
+      const socketId = Object.keys(streams)[0];
+      setSocketIdSelected(socketId);
+    }
+  }, [streams]);
+
+  const theme = useTheme();
   return (
     <Box
       sx={
@@ -27,8 +57,8 @@ const VideoThumbGallery = ({ videos, direction }: VideoThumbGalleryProps) => {
       }
     >
       <Box
-        sx={
-          direction === 'column'
+        sx={{
+          ...(direction === 'column'
             ? {
                 height: '100%',
                 overflowY: 'auto',
@@ -53,38 +83,55 @@ const VideoThumbGallery = ({ videos, direction }: VideoThumbGalleryProps) => {
                   backgroundColor: theme.palette.background.default, // Color de fondo del track
                 },
               }
-            : {}
-        }
+            : {}),
+        }}
       >
-        {videos.map((video, index) => (
-          <Box
-            key={index} // Moved the key to the outer Box
-            sx={
-              direction === 'column'
-                ? {
-                    width: '100%',
-                  }
-                : direction === 'row'
-                ? {
-                    height: '100%',
-                    display: 'inline-block',
-                    // width: '240px',
-                    mr: 1,
-                  }
-                : {}
-            }
+        {screenSharingStream && (
+          <VideoItemThumbGalleryContainer
+            direction={direction}
+            onClick={() => {}}
           >
-            <video
-              src={video.src}
-              style={{
-                height: '100%',
-                width: '100%',
-                objectFit: 'contain',
-                lineHeight: 0,
-              }}
-            />
-          </Box>
-        ))}
+            <VideoComponent stream={screenSharingStream} mutedVideo={true} />
+          </VideoItemThumbGalleryContainer>
+        )}
+        {Object.entries(streams).map(([socketId, stream]) => {
+          return (
+            <VideoItemThumbGalleryContainer
+              key={socketId}
+              direction={direction}
+              onClick={() => setSocketIdSelected(socketId)}
+            >
+              <VideoComponent
+                stream={stream.instance}
+                mutedVideo={stream.isHost}
+              />
+              <Box
+                sx={{
+                  position: 'absolute',
+                  bottom: 10,
+                  left: 0,
+                  zIndex: 1000,
+                  backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                  // transform: 'translateY(-25%)',
+                  width: '100%',
+                  px: 1,
+                  py: 0.5,
+                }}
+              >
+                <span
+                  style={{
+                    color: '#FFF',
+                    lineHeight: 0,
+                    padding: 0,
+                    margin: 0,
+                  }}
+                >
+                  {participantsOfRoom.find((x) => x.socketId == socketId)?.name}
+                </span>
+              </Box>
+            </VideoItemThumbGalleryContainer>
+          );
+        })}
       </Box>
     </Box>
   );

@@ -7,6 +7,7 @@ interface WebRCTContextProps {
   peer: PeersMap;
   streams: StreamMap;
   localStream: MediaStream | null;
+  screenSharingStream: MediaStream | null;
   loading: boolean;
   isRoomInitiator: boolean;
   createPeerConnection: (
@@ -16,6 +17,7 @@ interface WebRCTContextProps {
   removePeerConnection: (connectedUsersSocketId: string) => void;
   initializeRoom: () => void;
   signalingData: (data: { signal: SignalData; peerSocketId: string }) => void;
+  handleShareScreen: (isScreenSharing: boolean) => void;
 }
 
 // Crear el contexto y asignar un valor inicial
@@ -23,10 +25,12 @@ export const WebRCTContext = createContext<WebRCTContextProps>({
   peer: {},
   streams: {},
   localStream: null,
+  screenSharingStream: null,
   loading: false,
   isRoomInitiator: false,
   removePeerConnection: () => {},
   createPeerConnection: () => {},
   signalingData: () => {},
   initializeRoom: () => {},
+  handleShareScreen: () => {},
 });

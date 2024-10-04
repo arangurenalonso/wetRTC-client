@@ -4,17 +4,19 @@ import { WebRCTContext } from './webRCTContext';
 import useEmitSocket from '../wss/useEmitSocket';
 
 const useWebRTC = () => {
-  const { createNewRoom, joinRoom } = useEmitSocket();
+  const { createNewRoom, joinRoom, socket } = useEmitSocket();
 
   const {
     createPeerConnection,
     signalingData,
     removePeerConnection,
     initializeRoom,
+    handleShareScreen,
     localStream,
     peer,
     streams,
     loading,
+    screenSharingStream,
   } = useContext(WebRCTContext);
 
   const getLocalPreviewAndInitRoomConnection = async (
@@ -61,7 +63,9 @@ const useWebRTC = () => {
     loading,
     peer,
     streams,
-    localStream,
+    localStream: localStream,
+    socketIdHost: socket?.id,
+    screenSharingStream,
     //Methods
     getLocalPreviewAndInitRoomConnection,
     preparePeerConnection,
@@ -70,6 +74,7 @@ const useWebRTC = () => {
     toggleLocalAudio,
     toggleLocalVideo,
     initializeRoom,
+    handleShareScreen,
   };
 };
 

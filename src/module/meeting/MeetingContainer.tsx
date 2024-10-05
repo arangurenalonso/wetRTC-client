@@ -8,16 +8,25 @@ import VideoGrid from './views/VideoSection';
 import useRoomStore from '../../hooks/useRoomStore';
 import useParticipantsWSS from '../../context/wss/useParticipantsWSS';
 import useStreammingWSS from '../../context/wss/useStreammingWSS';
+import useChatWSS from '../../context/wss/useChatWSS';
+import useEmitSocket from '../../context/wss/useEmitSocket';
 
 const MeetingContainer = () => {
   useParticipantsWSS();
   useStreammingWSS();
+  useChatWSS();
   const { roomId, identity, isRoomHost } = useRoomStore();
   const { initializeRoom, getLocalPreviewAndInitRoomConnection } = useWebRTC();
+  const { leaveRoom } = useEmitSocket();
 
   useEffect(() => {
     initializeRoom();
     getLocalPreviewAndInitRoomConnection(isRoomHost, identity, roomId);
+    return () => {
+      console.log('Leaving room');
+
+      leaveRoom();
+    };
   }, []);
 
   return (

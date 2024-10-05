@@ -4,7 +4,7 @@ type ChatMessageProps = {
   user: {
     name: string;
   };
-  time: string;
+  time: Date;
   content: string;
   isHostMessage?: boolean;
 };
@@ -34,7 +34,7 @@ const ChatMessage = ({
           {user.name}
         </Typography>
         <Typography variant="caption" color="textSecondary">
-          {time}
+          {new Date(time).toLocaleTimeString()}
         </Typography>
       </Box>
       <Paper

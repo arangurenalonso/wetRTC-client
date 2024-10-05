@@ -1,9 +1,19 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { WebRCTContext } from './webRCTContext';
 import Peer, { SignalData } from 'simple-peer';
 import useEmitSocket from '../wss/useEmitSocket';
 import usePermission from '../../hooks/usePermissions';
+import useRoomStore from '../../hooks/useRoomStore';
 
+const getConfiguration = () => {
+  return {
+    iceServers: [
+      {
+        urls: ['stun:stun.l.google.com:19302'],
+      },
+    ],
+  };
+};
 interface WebRCTProviderProps {
   children: ReactNode;
 }
@@ -22,11 +32,51 @@ const WebRCTProvider = ({ children }: WebRCTProviderProps) => {
   const [peer, setPeer] = useState<PeersMap>({});
   const [streams, setStreams] = useState<StreamMap>({});
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const { signalPeerData } = useEmitSocket();
-  const [isRoomInitiator, setIsRoomInitiator] = useState<boolean>(false);
-  const { getLocalStream, loading } = usePermission();
   const [screenSharingStream, setScreenSharingStream] =
     useState<MediaStream | null>(null);
+
+  const [isRoomInitiator, setIsRoomInitiator] = useState<boolean>(false);
+
+  const { signalPeerData } = useEmitSocket();
+  const { getLocalStream, loading } = usePermission();
+  const { tougleShare } = useRoomStore();
+  const localStreamRef = useRef(localStream);
+  useEffect(() => {
+    console.log('localStream useEffect', localStream);
+
+    localStreamRef.current = localStream;
+  }, [localStream]);
+
+  useEffect(() => {
+    return () => {
+      // Clean up local stream
+      setLocalStream((prevLocalStream) => {
+        if (prevLocalStream) {
+          prevLocalStream.getTracks().forEach((track) => track.stop());
+        }
+        return null;
+      });
+      // Clean up screen sharing stream
+      setScreenSharingStream((prevScreenSharingStream) => {
+        if (prevScreenSharingStream) {
+          prevScreenSharingStream.getTracks().forEach((track) => track.stop());
+        }
+        return null;
+      });
+      //Clean up peer connection
+      setPeer((prevPeers) => {
+        Object.values(prevPeers).forEach((p) => p.destroy());
+        return {};
+      });
+      //Clean up streams
+      setStreams((prevStreams) => {
+        Object.values(prevStreams).forEach((stream) => {
+          stream.instance.getTracks().forEach((track) => track.stop());
+        });
+        return {};
+      });
+    };
+  }, []);
 
   const handleShareScreen = async (isScreenSharing: boolean) => {
     if (isScreenSharing) {
@@ -42,6 +92,23 @@ const WebRCTProvider = ({ children }: WebRCTProviderProps) => {
       if (stream) {
         setScreenSharingStream(stream);
         // Cambiar el stream en la conexión peer existente
+        const screenTrack = stream.getVideoTracks()[0];
+        screenTrack.onended = () => {
+          console.log('Screen sharing stopped');
+          // Aquí puedes detener el stream de la pantalla compartida y volver al stream original
+          setScreenSharingStream(null);
+          tougleShare();
+          if (localStream) {
+            Object.values(peer).forEach((peerInstance) => {
+              peerInstance.replaceTrack(
+                stream.getVideoTracks()[0], // El track de video de la pantalla compartida
+                localStream.getVideoTracks()[0], // Volver al track de video original
+                localStream
+              );
+            });
+          }
+        };
+
         if (localStream) {
           Object.values(peer).forEach((peerInstance) => {
             peerInstance.replaceTrack(
@@ -53,8 +120,12 @@ const WebRCTProvider = ({ children }: WebRCTProviderProps) => {
         }
       }
     } else {
-      screenSharingStream?.getTracks().forEach((track) => track.stop());
-      setScreenSharingStream(null);
+      setScreenSharingStream((prevScreenSharingStream) => {
+        if (prevScreenSharingStream) {
+          prevScreenSharingStream.getTracks().forEach((track) => track.stop());
+        }
+        return null;
+      });
       if (screenSharingStream && localStream) {
         Object.values(peer).forEach((peerInstance) => {
           peerInstance.replaceTrack(
@@ -66,21 +137,12 @@ const WebRCTProvider = ({ children }: WebRCTProviderProps) => {
       }
     }
   };
-  const getConfiguration = () => {
-    return {
-      iceServers: [
-        {
-          urls: ['stun:stun.l.google.com:19302'],
-        },
-      ],
-    };
-  };
-
   const createPeerConnection = async (
     usersSocketId: string,
     isInitiator: boolean
   ) => {
-    const localStreamResult = localStream || (await getLocalStream());
+    const localStreamResult =
+      localStreamRef.current || (await getLocalStream());
     if (localStreamResult) {
       setLocalStream(localStreamResult);
     }
@@ -102,7 +164,6 @@ const WebRCTProvider = ({ children }: WebRCTProviderProps) => {
       });
 
       peerInstance.on('stream', (stream) => {
-        console.log('new stream come');
         setStreams((prevStreams) => ({
           ...prevStreams,
           [usersSocketId]: {
@@ -114,72 +175,54 @@ const WebRCTProvider = ({ children }: WebRCTProviderProps) => {
       peerInstance.on('error', (err) => {
         console.error('Error in peer connection:', err);
       });
-      setPeer((prev) => ({ ...prev, [usersSocketId]: peerInstance }));
 
-      console.log('createNewPeerConnection finish');
+      setPeer((prevPeer) => ({ ...prevPeer, [usersSocketId]: peerInstance }));
     } catch (error) {
       console.log('createNewPeerConnection error', error);
     }
   };
-
-  const signalingData = async (data: {
+  const signalingData = (data: {
     signal: SignalData;
     peerSocketId: string;
   }) => {
     console.log('handleSignalingData');
-    setPeer((prev) => {
+
+    setPeer((prevPeer) => {
       const { signal, peerSocketId } = data;
-      const existingPeer = prev[peerSocketId];
+      const existingPeer = prevPeer[peerSocketId];
       if (existingPeer) {
         existingPeer.signal(signal);
       }
-      return { ...prev, [peerSocketId]: existingPeer };
+      return { ...prevPeer, [peerSocketId]: existingPeer };
     });
   };
-
   const removePeerConnection = (socketIdUserDisconnected: string) => {
-    const stream = streams[socketIdUserDisconnected];
-    if (stream) {
-      stream.instance.getTracks().forEach((track) => {
-        track.stop();
-      });
-    }
-    setStreams((prev) => {
-      const newStreams = { ...prev };
-      delete newStreams[socketIdUserDisconnected];
-      return newStreams;
-    });
-    const peers = peer[socketIdUserDisconnected];
-    if (peers) {
-      peers.destroy();
-    }
-    setPeer((prev) => {
-      const newPeers = { ...prev };
+    setPeer((prevPeer) => {
+      const peerToRemove = prevPeer[socketIdUserDisconnected];
+      if (peerToRemove) {
+        peerToRemove.destroy();
+      }
+      const newPeers = { ...prevPeer };
       delete newPeers[socketIdUserDisconnected];
       return newPeers;
     });
-  };
 
-  useEffect(() => {
-    return () => {
-      // Cleanup the stream when the component unmounts
-      if (localStream) {
-        localStream.getTracks().forEach((track) => track.stop());
-        setLocalStream(null); // Limpiar el estado local
+    setStreams((prevStreams) => {
+      const stream = prevStreams[socketIdUserDisconnected];
+      if (stream) {
+        stream.instance.getTracks().forEach((track) => {
+          track.stop();
+        });
       }
-      //Clean up the peer connection
-      Object.values(peer).forEach((p) => p.destroy());
-      setPeer({});
-      //Clean up the streams
-      Object.values(streams).forEach((stream) => {
-        stream.instance.getTracks().forEach((track) => track.stop());
-      });
-      setStreams({});
-    };
-  }, []);
+      const newStreams = { ...prevStreams };
+      delete newStreams[socketIdUserDisconnected];
 
+      return newStreams;
+    });
+  };
   const initializeRoom = async () => {
-    const localStreamResult = localStream || (await getLocalStream());
+    const localStreamResult =
+      localStreamRef.current || (await getLocalStream());
     if (localStreamResult) {
       setLocalStream(localStreamResult);
     }
@@ -188,7 +231,7 @@ const WebRCTProvider = ({ children }: WebRCTProviderProps) => {
   return (
     <WebRCTContext.Provider
       value={{
-        peer,
+        // peer,
         streams,
         localStream,
         loading,

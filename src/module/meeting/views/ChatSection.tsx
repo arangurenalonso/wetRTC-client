@@ -3,9 +3,11 @@ import ChatMessageList from '../component/ChatMessageList';
 import ChatInput from '../component/ChatInput';
 import useRoomStore from '../../../hooks/useRoomStore';
 import TitleSidebar from '../component/TitleSidebar';
+import useWebRTC from '../../../context/webRTC/useWebRTC';
 
 const ChatSection = () => {
-  const { isChatOpen, tougleChat } = useRoomStore();
+  const { isChatOpen, tougleChat, messages } = useRoomStore();
+  const { socketIdHost } = useWebRTC();
   return (
     <Paper
       sx={{
@@ -32,7 +34,7 @@ const ChatSection = () => {
             overflow: 'hidden',
           }}
         >
-          <ChatMessageList />
+          <ChatMessageList messages={messages} socketIdHost={socketIdHost} />
         </Grid2>
 
         <Divider />

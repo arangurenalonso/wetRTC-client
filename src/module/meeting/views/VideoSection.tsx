@@ -33,6 +33,7 @@ const VideoGrid = () => {
           size={'grow'}
           sx={{
             overflow: 'hidden',
+            height: '100%',
             ...(isSmallScreen ? { height: '100%' } : {}),
           }}
         >

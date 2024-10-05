@@ -26,11 +26,21 @@ const useEmitSocket = () => {
   }) => {
     socket?.emit('webRTC/signal-exchange', data);
   };
+
+  const handleNewMessage = (message: string) => {
+    const data = { message };
+    socket?.emit('chat/new-message', data);
+  };
+  const leaveRoom = () => {
+    socket?.emit('room/leave');
+  };
   return {
     socket,
     createNewRoom,
     joinRoom,
     signalPeerData,
+    handleNewMessage,
+    leaveRoom,
   };
 };
 export default useEmitSocket;

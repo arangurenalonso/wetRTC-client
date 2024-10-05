@@ -31,12 +31,15 @@ import MenuItemHover from '../component/MenuItemHover';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import useWebRTC from '../../../context/webRTC/useWebRTC';
+import { useNavigate } from 'react-router-dom';
 const MeetingToolbar = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
-
+  const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
-
+  const leaveRoom = () => {
+    navigate('/');
+  };
   const {
     isChatOpen,
     isPeopleOpen,
@@ -165,6 +168,7 @@ const MeetingToolbar = () => {
                 open={open}
                 onClose={handleMenuClose}
                 keepMounted
+                onClick={handleMenuClose}
               >
                 <MenuItemHover
                   icon={<ChatIcon sx={{ mr: 1 }} />}
@@ -200,25 +204,20 @@ const MeetingToolbar = () => {
                   }
                   label="Mic"
                   isActive={isMicroOn}
-                  onClick={tougleMic}
-                />
-                <MenuItemHover
-                  icon={
-                    isShareOn ? (
-                      <ScreenShareIcon sx={{ mr: 1 }} />
-                    ) : (
-                      <StopScreenShareIcon sx={{ mr: 1 }} />
-                    )
-                  }
-                  label="Share"
-                  isActive={isShareOn}
-                  onClick={tougleShare}
+                  onClick={() => {
+                    tougleMic();
+                  }}
                 />
               </Menu>
             </Box>
           )}
         </>
-        <Button variant="contained" color="error" startIcon={<CallEndIcon />}>
+        <Button
+          variant="contained"
+          color="error"
+          startIcon={<CallEndIcon />}
+          onClick={leaveRoom}
+        >
           Leave
         </Button>
       </Box>

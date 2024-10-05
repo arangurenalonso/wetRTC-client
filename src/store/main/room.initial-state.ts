@@ -4,12 +4,19 @@ export type UserParticipant = {
   socketId: string;
   roomId: string;
 };
+export type MessageType = {
+  id: string;
+  user: UserParticipant;
+  message: string;
+  time: Date;
+};
 export type RoomState = {
   identity?: string;
   isRoomHost: boolean;
   connectOnlyWithAudio: boolean;
   roomId?: string;
   participantsOfRoom: UserParticipant[];
+  messages: MessageType[];
   isChatOpen: boolean;
   isPeopleOpen: boolean;
   isCamarasOn: boolean;
@@ -23,6 +30,7 @@ export const roomInitialState: RoomState = {
   connectOnlyWithAudio: false,
   roomId: undefined,
   participantsOfRoom: [],
+  messages: [],
   isChatOpen: false,
   isPeopleOpen: false,
   isCamarasOn: true,

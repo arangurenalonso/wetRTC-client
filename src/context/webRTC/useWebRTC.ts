@@ -13,7 +13,7 @@ const useWebRTC = () => {
     initializeRoom,
     handleShareScreen,
     localStream,
-    peer,
+    // peer,
     streams,
     loading,
     screenSharingStream,
@@ -61,7 +61,7 @@ const useWebRTC = () => {
   return {
     //Properties
     loading,
-    peer,
+    // peer,
     streams,
     localStream: localStream,
     socketIdHost: socket?.id,

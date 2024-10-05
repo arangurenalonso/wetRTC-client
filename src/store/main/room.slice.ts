@@ -1,5 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { roomInitialState, UserParticipant } from './room.initial-state';
+import {
+  MessageType,
+  roomInitialState,
+  UserParticipant,
+} from './room.initial-state';
 
 export const roomSlice = createSlice({
   name: 'room',
@@ -51,6 +55,12 @@ export const roomSlice = createSlice({
       state.isChatOpen = false;
       state.isPeopleOpen = action.payload;
     },
+    setMessages: (state, action: PayloadAction<MessageType[]>) => {
+      state.messages = action.payload;
+    },
+    setMessage: (state, action: PayloadAction<MessageType>) => {
+      state.messages = [...state.messages, action.payload];
+    },
   },
 });
 
@@ -65,4 +75,6 @@ export const {
   setShare,
   setChat,
   setPeople,
+  setMessages,
+  setMessage,
 } = roomSlice.actions;

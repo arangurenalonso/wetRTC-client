@@ -49,7 +49,6 @@ const useStreammingWSS = () => {
   const handleListenerUserDisconnected = (data: {
     socketIdUserDisconnected: string;
   }) => {
-    console.log('handleListenerUserDisconnected', data);
     const { socketIdUserDisconnected } = data;
     handleUserDisconnected(socketIdUserDisconnected);
   };

@@ -11,9 +11,11 @@ import {
   setPeople,
   setRoomId,
   setShare,
+  setMessages,
+  setMessage,
 } from '../store/main/room.slice';
 import { serverApi } from '../api/server';
-import { UserParticipant } from '../store/main/room.initial-state';
+import { MessageType, UserParticipant } from '../store/main/room.initial-state';
 
 const useRoomStore = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -28,6 +30,7 @@ const useRoomStore = () => {
     isCamarasOn,
     isMicroOn,
     isShareOn,
+    messages,
   } = useSelector((state: RootState) => state.room);
 
   const onSetIsRoomHostProcess = async (isHostedRoom: boolean) => {
@@ -66,6 +69,12 @@ const useRoomStore = () => {
   const tougleShare = () => {
     dispatch(setShare(!isShareOn));
   };
+  const onSetMessagesProcess = async (messages: MessageType[]) => {
+    dispatch(setMessages(messages));
+  };
+  const onSetNewMessageProcess = async (message: MessageType) => {
+    dispatch(setMessage(message));
+  };
   return {
     //*Properties
     identity,
@@ -78,7 +87,7 @@ const useRoomStore = () => {
     isCamarasOn,
     isMicroOn,
     isShareOn,
-
+    messages,
     //*Methods
     onSetIsRoomHostProcess,
     ontSetConnectOnlyWithAudioProcess,
@@ -91,6 +100,8 @@ const useRoomStore = () => {
     tougleCam,
     tougleMic,
     tougleShare,
+    onSetMessagesProcess,
+    onSetNewMessageProcess,
   };
 };
 export default useRoomStore;

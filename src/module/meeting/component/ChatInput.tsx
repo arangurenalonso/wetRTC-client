@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { Box, TextField, IconButton } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import useEmitSocket from '../../../context/wss/useEmitSocket';
 
 const ChatInput = () => {
   const [message, setMessage] = useState('');
-
+  const { handleNewMessage } = useEmitSocket();
   const handleSendMessage = () => {
-    if (message.trim()) {
+    const messageTrim = message.trim();
+    if (messageTrim.length > 0) {
       // Lógica para enviar el mensaje
-      console.log('Mensaje enviado:', message);
+      handleNewMessage(messageTrim);
       setMessage(''); // Limpiar el campo de texto
     }
   };
